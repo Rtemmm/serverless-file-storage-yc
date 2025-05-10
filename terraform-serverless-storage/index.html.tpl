@@ -23,24 +23,18 @@ const listUrl = '${list_url}';
 const deleteUrl = '${delete_url}';
 const downloadUrl = '${download_url}';
 
-function uploadFile() {
+async function uploadFile() {
   const file = document.getElementById('fileInput').files[0];
-  if (!file) return alert('Choose a file first');
+  if (!file) return alert('Check file!');
+  
+  const buffer = await file.arrayBuffer();
+  await fetch(`$${uploadUrl}?filename=$${encodeURIComponent(file.name)}`, {
+    method: 'POST',
+    body: buffer
+  });
 
-  const reader = new FileReader();
-  reader.onloadend = () => {
-    const base64data = reader.result.split(',')[1];
-
-    fetch(`$${uploadUrl}?filename=$${encodeURIComponent(file.name)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/octet-stream' },
-      body: base64data
-    }).then(() => {
-      alert('Uploaded!');
-      loadFiles();
-    });
-  };
-  reader.readAsDataURL(file);
+  alert('Uploaded!');
+  loadFiles();
 }
 
 function loadFiles() {

@@ -10,8 +10,15 @@ s3 = boto3.client(
 )
 
 def handler(event, context):
-    file_content = base64.b64decode(event['body'])
-    filename = event['queryStringParameters'].get('filename', 'uploaded_file')
-    s3.put_object(Bucket=os.environ['BUCKET_NAME'], Key=filename, Body=file_content)
-    
-    return {"statusCode": 200, "body": f"{filename} uploaded"}
+    raw = event['body']
+    if event.get('isBase64Encoded'):
+        data = base64.b64decode(raw)
+    else:
+        data = raw.encode('utf-8')
+
+    filename = (event.get('queryStringParameters') or {}).get('filename')
+    if not filename:
+        return {"statusCode": 400, "body": "Missing 'filename'"}
+
+    s3.put_object(Bucket=os.environ['BUCKET_NAME'], Key=filename, Body=data)
+    return {"statusCode": 200, "body": f"{filename} загружен"}
